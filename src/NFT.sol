@@ -8,9 +8,9 @@ contract ModelNFTs is ERC721URIStorage{
 
     constructor(string memory _ModelName, string memory _ModelNum) ERC721(_ModelName, _ModelNum) {}
 
-    mapping (address => uint256[]) public addressToTokenIds ;
+    mapping (address => uint256[]) private addressToTokenIds ;
 
-    uint256 tokenId = 1;
+    uint256 private tokenId = 1;
 
     function mint(address _to, string memory _tokenURI) external {
         _safeMint(_to, tokenId);

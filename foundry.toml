@@ -3,7 +3,8 @@ src = "src"
 out = "out"
 libs = ["lib"]
 remappings = [
-    '@openzeppelin/=lib/@openzeppelin-contracts/'
+    '@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/'
 ]
+#/home/sameer/CrazzzyProject/lib/openzeppelin-contracts/contracts/token/ERC721/ERC721.sol
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
