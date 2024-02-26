@@ -2,24 +2,34 @@
 pragma solidity ^0.8.13;
 
 import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import {ERC721Enumerable} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import {ERC721URIStorage} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 
 contract ModelNFTs is ERC721URIStorage{
 
-    constructor(string memory _ModelName, string memory _ModelNum) ERC721(_ModelName, _ModelNum) {}
+    address immutable i_shoyu;
+    uint256 private tokenId;
+
+    modifier ONLY_SHOYU (){
+        require(msg.sender == i_shoyu);
+        _;
+    }
+
+    constructor(string memory _ModelName, string memory _ModelNum , address _shoyu) ERC721(_ModelName, _ModelNum) {
+        i_shoyu = _shoyu;
+        tokenId = 1;
+    }
 
     mapping (address => uint256[]) private addressToTokenIds ;
 
-    uint256 private tokenId = 1;
-
-    function mint(address _to, string memory _tokenURI) external {
+    function mint(address _to, string memory _tokenURI) external ONLY_SHOYU{
         _safeMint(_to, tokenId);
         _setTokenURI(tokenId, _tokenURI);
         addressToTokenIds[_to].push(tokenId);
         tokenId ++;
     }
 
-    function batchMint(address _to, uint256 _totalNum, string memory _tokenURI) external {
+    function batchMint(address _to, uint256 _totalNum, string memory _tokenURI) external ONLY_SHOYU{
         for (uint256 i = 0; i < _totalNum; i++) {
             _safeMint(_to, tokenId);
             _setTokenURI(tokenId, _tokenURI);

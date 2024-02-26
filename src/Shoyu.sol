@@ -3,7 +3,7 @@ pragma solidity ^0.8.7;
 
 import {ModelNFTs} from "./NFT.sol";
 
-contract ModelManager {
+contract Shoyu {
     modifier ONLY_MANUFACTURER() {
         require(addressToUser[msg.sender].IfManufacturer);
         _;
@@ -25,7 +25,7 @@ contract ModelManager {
 
     //Models
     mapping(address => mapping(string => address)) private userModelAdd; // manufacturer to mapp od modelno. to  contract add
-    mapping(address => modelStruct[]) public usersToModel;
+    mapping(address => modelStruct[]) private usersToModel;
 
     function isManufacturer(address _add) public view returns (bool) {
         return (addressToUser[_add].IfManufacturer);
@@ -39,7 +39,7 @@ contract ModelManager {
         string memory _modelName,
         string memory _modelNum
     ) public ONLY_MANUFACTURER {
-        ModelNFTs model = new ModelNFTs(_modelName, _modelNum);
+        ModelNFTs model = new ModelNFTs(_modelName, _modelNum, address(this));
         userModelAdd[msg.sender][_modelNum] = address(model);
         usersToModel[msg.sender].push(
             modelStruct(address(model), _modelName, _modelNum)
