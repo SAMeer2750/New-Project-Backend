@@ -21,27 +21,36 @@ contract Shoyu {
         string modelNum;
     }
 
+    struct listedToken {
+        address contractAdd;
+        uint256 tokenId;
+        bool offer;
+    }
+
     mapping(address => user) private addressToUser;
 
-    //Models
-    mapping(address => mapping(string => address)) private userModelAdd; // manufacturer to mapp od modelno. to  contract add
-    mapping(address => modelStruct[]) private usersToModel;
+    mapping(address => mapping(string => address))
+        private manuToModelNoToModelAdd; // manufacturer to mapp od modelno. to  contract add
+    mapping(address => modelStruct[]) private manuToModel;
 
-    function isManufacturer(address _add) public view returns (bool) {
+    // listedToken[] private listedTokens;
+    // mapping(address => listedToken[]) private myListedTokens;
+
+    function isManufacturer(address _add) external view returns (bool) {
         return (addressToUser[_add].IfManufacturer);
     }
 
-    function createUser(bool _IfManufacturer, string memory _UserCid) public {
+    function createUser(bool _IfManufacturer, string memory _UserCid) external {
         addressToUser[msg.sender] = user(_UserCid, _IfManufacturer);
     }
 
     function addModel(
         string memory _modelName,
         string memory _modelNum
-    ) public ONLY_MANUFACTURER {
+    ) external ONLY_MANUFACTURER {
         ModelNFTs model = new ModelNFTs(_modelName, _modelNum, address(this));
-        userModelAdd[msg.sender][_modelNum] = address(model);
-        usersToModel[msg.sender].push(
+        manuToModelNoToModelAdd[msg.sender][_modelNum] = address(model);
+        manuToModel[msg.sender].push(
             modelStruct(address(model), _modelName, _modelNum)
         );
     }
@@ -49,12 +58,14 @@ contract Shoyu {
     function mintNFT(
         string memory _modelNum,
         string memory _tokenURI
-    ) public ONLY_MANUFACTURER {
+    ) external ONLY_MANUFACTURER {
         require(
-            userModelAdd[msg.sender][_modelNum] != address(0),
+            manuToModelNoToModelAdd[msg.sender][_modelNum] != address(0),
             "Model does not exist"
         );
-        ModelNFTs modelNFT = ModelNFTs(userModelAdd[msg.sender][_modelNum]);
+        ModelNFTs modelNFT = ModelNFTs(
+            manuToModelNoToModelAdd[msg.sender][_modelNum]
+        );
         modelNFT.mint(msg.sender, _tokenURI);
     }
 
@@ -62,12 +73,14 @@ contract Shoyu {
         string memory _modelNum,
         uint256 _totalNum,
         string memory _tokenURI
-    ) public ONLY_MANUFACTURER {
+    ) external ONLY_MANUFACTURER {
         require(
-            userModelAdd[msg.sender][_modelNum] != address(0),
+            manuToModelNoToModelAdd[msg.sender][_modelNum] != address(0),
             "Model does not exist"
         );
-        ModelNFTs modelNFT = ModelNFTs(userModelAdd[msg.sender][_modelNum]);
+        ModelNFTs modelNFT = ModelNFTs(
+            manuToModelNoToModelAdd[msg.sender][_modelNum]
+        );
         modelNFT.batchMint(msg.sender, _totalNum, _tokenURI);
     }
 
@@ -76,12 +89,14 @@ contract Shoyu {
         address _from,
         address _to,
         uint256 _tokenId
-    ) public ONLY_MANUFACTURER {
+    ) external {
         require(
-            userModelAdd[msg.sender][_modelNum] != address(0),
+            manuToModelNoToModelAdd[msg.sender][_modelNum] != address(0),
             "Model does not exist"
         );
-        ModelNFTs modelNFT = ModelNFTs(userModelAdd[msg.sender][_modelNum]);
+        ModelNFTs modelNFT = ModelNFTs(
+            manuToModelNoToModelAdd[msg.sender][_modelNum]
+        );
         modelNFT.transferNFT(_from, _to, _tokenId);
     }
 
@@ -90,32 +105,68 @@ contract Shoyu {
         address _from,
         address _to,
         uint256[] memory _tokenIds
-    ) public ONLY_MANUFACTURER {
+    ) external {
         require(
-            userModelAdd[msg.sender][_modelNum] != address(0),
+            manuToModelNoToModelAdd[msg.sender][_modelNum] != address(0),
             "Model does not exist"
         );
-        ModelNFTs modelNFT = ModelNFTs(userModelAdd[msg.sender][_modelNum]);
+        ModelNFTs modelNFT = ModelNFTs(
+            manuToModelNoToModelAdd[msg.sender][_modelNum]
+        );
         modelNFT.batchTransferNFTs(_from, _to, _tokenIds);
     }
 
-    function getUser() public view returns(user memory){
-        return(addressToUser[msg.sender]);
+    // function normalListing(
+    //     uint256 _amt,
+    //     uint256 _tokenId,
+    //     address _contract
+    // ) external {
+    //     myListedTokens[msg.sender].push(
+    //         listedToken(_contract, _tokenId, false)
+    //     );
+    //     listedTokens.push(
+    //         listedToken(_contract, _tokenId, false));
+        
+    // }
+
+    // function oferListing(uint256 _tokenId, address _contract) external {
+    //     myListedTokens[msg.sender].push(
+    //         listedToken(_contract, _tokenId, true));
+    //     listedTokens.push(
+    //         listedToken(_contract, _tokenId, true));
+    // }
+
+    function getUser() external view returns (user memory) {
+        return (addressToUser[msg.sender]);
     }
 
-    function getManufacturerModles() public view ONLY_MANUFACTURER returns(modelStruct[] memory){
-        return(usersToModel[msg.sender]);
+    function getManufacturerModles()
+        external
+        view
+        ONLY_MANUFACTURER
+        returns (modelStruct[] memory)
+    {
+        return (manuToModel[msg.sender]);
     }
 
-    function getModlesTotalInventory(string memory _modelNum) public view ONLY_MANUFACTURER returns(uint256){
-        ModelNFTs modelNFT = ModelNFTs(userModelAdd[msg.sender][_modelNum]);
-        return(modelNFT.getTotalSupply());
+    function getModlesTotalInventory(
+        string memory _modelNum
+    ) external view ONLY_MANUFACTURER returns (uint256) {
+        ModelNFTs modelNFT = ModelNFTs(
+            manuToModelNoToModelAdd[msg.sender][_modelNum]
+        );
+        return (modelNFT.getTotalSupply());
     }
 
-    function getTotalModelOwned(string memory _modelNum) public view returns(uint256[] memory){
-        ModelNFTs modelNFT = ModelNFTs(userModelAdd[msg.sender][_modelNum]);
-        return(modelNFT.getOwnersTokens());
+    function getTotalModelOwned(
+        string memory _modelNum
+    ) external view returns (uint256[] memory) {
+        ModelNFTs modelNFT = ModelNFTs(
+            manuToModelNoToModelAdd[msg.sender][_modelNum]
+        );
+        return (modelNFT.getOwnersTokens());
     }
-    //3rd party ownership visiblity.. 
-    //
+    //3rd party ownership visiblity..
+    //all listing
+    //auctions..
 }
